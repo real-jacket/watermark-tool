@@ -253,7 +253,7 @@ function App() {
                         name="mode"
                         value="single"
                         checked={watermarkOptions.mode === 'single'}
-                        onChange={(e) =>
+                        onChange={() =>
                           setWatermarkOptions({
                             ...watermarkOptions,
                             mode: 'single',
@@ -275,7 +275,7 @@ function App() {
                         name="mode"
                         value="tile"
                         checked={watermarkOptions.mode === 'tile'}
-                        onChange={(e) =>
+                        onChange={() =>
                           setWatermarkOptions({
                             ...watermarkOptions,
                             mode: 'tile',
@@ -639,7 +639,7 @@ function App() {
                             name="format"
                             value="png"
                             checked={exportFormat === 'png'}
-                            onChange={(e) => setExportFormat('png')}
+                            onChange={() => setExportFormat('png')}
                             className="sr-only"
                           />
                           <span className="text-sm font-medium">PNG</span>
@@ -656,7 +656,7 @@ function App() {
                             name="format"
                             value="jpeg"
                             checked={exportFormat === 'jpeg'}
-                            onChange={(e) => setExportFormat('jpeg')}
+                            onChange={() => setExportFormat('jpeg')}
                             className="sr-only"
                           />
                           <span className="text-sm font-medium">JPEG</span>
@@ -673,7 +673,7 @@ function App() {
                             name="format"
                             value="webp"
                             checked={exportFormat === 'webp'}
-                            onChange={(e) => setExportFormat('webp')}
+                            onChange={() => setExportFormat('webp')}
                             className="sr-only"
                           />
                           <span className="text-sm font-medium">WebP</span>

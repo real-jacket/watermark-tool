@@ -1,5 +1,3 @@
-import heic2any from 'heic2any';
-
 export interface WatermarkOptions {
   text: string;
   fontSize: number;
@@ -185,6 +183,9 @@ export const loadImage = async (file: File): Promise<HTMLImageElement> => {
   // 如果是 HEIC 格式，转换为 JPEG
   if (isHeic) {
     try {
+      // 动态导入 heic2any，只在需要时加载
+      const heic2any = (await import('heic2any')).default;
+
       const convertedBlob = await heic2any({
         blob: file,
         toType: 'image/jpeg',
