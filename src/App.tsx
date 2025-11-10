@@ -7,6 +7,89 @@ import {
   ImageFormat,
 } from './utils/watermark';
 
+// 水印预设
+type WatermarkPreset = {
+  name: string;
+  description: string;
+  options: WatermarkOptions;
+};
+
+const WATERMARK_PRESETS: WatermarkPreset[] = [
+  {
+    name: '经典斜向',
+    description: '红色斜向平铺，密集覆盖',
+    options: {
+      text: '仅供XXX使用',
+      fontSize: 40,
+      color: '#FF0000',
+      opacity: 0.5,
+      position: 'center',
+      rotation: -45,
+      mode: 'tile',
+      spacing: 50,
+      offsetX: 0,
+      offsetY: 0,
+    },
+  },
+  {
+    name: '稀疏防伪',
+    description: '大字号稀疏分布',
+    options: {
+      text: '仅供XXX使用',
+      fontSize: 50,
+      color: '#FF0000',
+      opacity: 0.4,
+      position: 'center',
+      rotation: -45,
+      mode: 'tile',
+      spacing: 150,
+      offsetX: 0,
+      offsetY: 0,
+    },
+  },
+  {
+    name: '中心单水印',
+    description: '居中单个水印，醒目',
+    options: {
+      text: '仅供XXX使用',
+      fontSize: 60,
+      color: '#FF0000',
+      opacity: 0.6,
+      position: 'center',
+      rotation: 0,
+      mode: 'single',
+      spacing: 50,
+      offsetX: 0,
+      offsetY: 0,
+    },
+  },
+  {
+    name: '灰色低调',
+    description: '灰色平铺，低调不抢眼',
+    options: {
+      text: '仅供XXX使用',
+      fontSize: 35,
+      color: '#808080',
+      opacity: 0.3,
+      position: 'center',
+      rotation: -45,
+      mode: 'tile',
+      spacing: 80,
+      offsetX: 0,
+      offsetY: 0,
+    },
+  },
+];
+
+// 常用颜色预设
+const COLOR_PRESETS = [
+  { name: '红色', value: '#FF0000' },
+  { name: '黑色', value: '#000000' },
+  { name: '灰色', value: '#808080' },
+  { name: '蓝色', value: '#0066FF' },
+  { name: '绿色', value: '#00AA00' },
+];
+
 function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(
@@ -23,6 +106,15 @@ function App() {
   // 预览模式切换：true 显示水印，false 显示原图
   const [showWatermark, setShowWatermark] = useState(true);
 
+  // 折叠面板状态
+  const [expandedSections, setExpandedSections] = useState<{
+    [key: string]: boolean;
+  }>({
+    basic: true,
+    advanced: true,
+    position: true,
+  });
+
   const [watermarkOptions, setWatermarkOptions] = useState<WatermarkOptions>({
     text: '仅供XXX使用',
     fontSize: 40,
@@ -37,6 +129,19 @@ function App() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 切换折叠面板
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  // 应用预设
+  const applyPreset = (preset: WatermarkPreset) => {
+    setWatermarkOptions(preset.options);
+  };
 
   // 处理文件选择
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,297 +340,462 @@ function App() {
                 配置水印
               </h2>
               <div className="space-y-5">
-                {/* 水印模式 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    水印模式
+                {/* 快速预设 */}
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-100">
+                  <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    快速预设
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label
-                      className={`flex items-center justify-center cursor-pointer px-4 py-3 rounded-lg border-2 transition-all ${
-                        watermarkOptions.mode === 'single'
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="mode"
-                        value="single"
-                        checked={watermarkOptions.mode === 'single'}
-                        onChange={() =>
-                          setWatermarkOptions({
-                            ...watermarkOptions,
-                            mode: 'single',
-                          })
-                        }
-                        className="sr-only"
-                      />
-                      <span className="text-sm font-medium">单个水印</span>
-                    </label>
-                    <label
-                      className={`flex items-center justify-center cursor-pointer px-4 py-3 rounded-lg border-2 transition-all ${
-                        watermarkOptions.mode === 'tile'
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="mode"
-                        value="tile"
-                        checked={watermarkOptions.mode === 'tile'}
-                        onChange={() =>
-                          setWatermarkOptions({
-                            ...watermarkOptions,
-                            mode: 'tile',
-                          })
-                        }
-                        className="sr-only"
-                      />
-                      <span className="text-sm font-medium">平铺模式</span>
-                    </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {WATERMARK_PRESETS.map((preset, index) => (
+                      <button
+                        key={index}
+                        onClick={() => applyPreset(preset)}
+                        className="text-left px-3 py-2 rounded-lg border-2 border-indigo-200 hover:border-indigo-400 hover:bg-white transition-all group"
+                      >
+                        <div className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">
+                          {preset.name}
+                        </div>
+                        <div className="text-xs text-gray-600 mt-0.5">
+                          {preset.description}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* 水印文字 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    水印文字
-                  </label>
-                  <input
-                    type="text"
-                    value={watermarkOptions.text}
-                    onChange={(e) =>
-                      setWatermarkOptions({
-                        ...watermarkOptions,
-                        text: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="输入水印文字"
-                  />
-                </div>
-
-                {/* 字体大小 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    字体大小: {watermarkOptions.fontSize}px
-                  </label>
-                  <input
-                    type="range"
-                    min="20"
-                    max="100"
-                    value={watermarkOptions.fontSize}
-                    onChange={(e) =>
-                      setWatermarkOptions({
-                        ...watermarkOptions,
-                        fontSize: Number(e.target.value),
-                      })
-                    }
-                    className="w-full"
-                  />
-                </div>
-
-                {/* 颜色 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    水印颜色
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="color"
-                      value={watermarkOptions.color}
-                      onChange={(e) =>
-                        setWatermarkOptions({
-                          ...watermarkOptions,
-                          color: e.target.value,
-                        })
-                      }
-                      className="h-10 w-20 rounded border border-gray-300 cursor-pointer"
-                    />
-                    <span className="text-sm text-gray-600">
-                      {watermarkOptions.color}
+                {/* 基础设置 - 可折叠 */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleSection('basic')}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-gray-800">
+                      基础设置
                     </span>
-                  </div>
-                </div>
-
-                {/* 透明度 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    透明度: {Math.round(watermarkOptions.opacity * 100)}%
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={watermarkOptions.opacity}
-                    onChange={(e) =>
-                      setWatermarkOptions({
-                        ...watermarkOptions,
-                        opacity: Number(e.target.value),
-                      })
-                    }
-                    className="w-full"
-                  />
-                </div>
-
-                {/* 位置 - 仅单个水印模式显示 */}
-                {watermarkOptions.mode === 'single' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      水印位置
-                    </label>
-                    <select
-                      value={watermarkOptions.position}
-                      onChange={(e) =>
-                        setWatermarkOptions({
-                          ...watermarkOptions,
-                          position: e.target
-                            .value as WatermarkOptions['position'],
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    <svg
+                      className={`w-5 h-5 text-gray-600 transition-transform ${
+                        expandedSections.basic ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <option value="center">居中</option>
-                      <option value="top-left">左上角</option>
-                      <option value="top-right">右上角</option>
-                      <option value="bottom-left">左下角</option>
-                      <option value="bottom-right">右下角</option>
-                    </select>
-                  </div>
-                )}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                  {expandedSections.basic && (
+                    <div className="p-4 space-y-4">
+                      {/* 水印模式 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          水印模式
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <label
+                            className={`flex items-center justify-center cursor-pointer px-4 py-3 rounded-lg border-2 transition-all ${
+                              watermarkOptions.mode === 'single'
+                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="mode"
+                              value="single"
+                              checked={watermarkOptions.mode === 'single'}
+                              onChange={() =>
+                                setWatermarkOptions({
+                                  ...watermarkOptions,
+                                  mode: 'single',
+                                })
+                              }
+                              className="sr-only"
+                            />
+                            <span className="text-sm font-medium">
+                              单个水印
+                            </span>
+                          </label>
+                          <label
+                            className={`flex items-center justify-center cursor-pointer px-4 py-3 rounded-lg border-2 transition-all ${
+                              watermarkOptions.mode === 'tile'
+                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="mode"
+                              value="tile"
+                              checked={watermarkOptions.mode === 'tile'}
+                              onChange={() =>
+                                setWatermarkOptions({
+                                  ...watermarkOptions,
+                                  mode: 'tile',
+                                })
+                              }
+                              className="sr-only"
+                            />
+                            <span className="text-sm font-medium">
+                              平铺模式
+                            </span>
+                          </label>
+                        </div>
+                      </div>
 
-                {/* 旋转角度 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    旋转角度: {watermarkOptions.rotation}°
-                  </label>
-                  <input
-                    type="range"
-                    min="-180"
-                    max="180"
-                    value={watermarkOptions.rotation}
-                    onChange={(e) =>
-                      setWatermarkOptions({
-                        ...watermarkOptions,
-                        rotation: Number(e.target.value),
-                      })
-                    }
-                    className="w-full"
-                  />
-                </div>
+                      {/* 水印文字 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          水印文字
+                        </label>
+                        <input
+                          type="text"
+                          value={watermarkOptions.text}
+                          onChange={(e) =>
+                            setWatermarkOptions({
+                              ...watermarkOptions,
+                              text: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                          placeholder="输入水印文字"
+                        />
+                      </div>
 
-                {/* 水印间距 - 仅平铺模式显示 */}
-                {watermarkOptions.mode === 'tile' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      水印间距: {watermarkOptions.spacing}%
-                      <span className="text-xs text-gray-500 ml-2">
-                        (
-                        {watermarkOptions.spacing < 30
-                          ? '密集'
-                          : watermarkOptions.spacing < 100
-                          ? '适中'
-                          : '稀疏'}
-                        )
-                      </span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="300"
-                      step="5"
-                      value={watermarkOptions.spacing}
-                      onChange={(e) =>
-                        setWatermarkOptions({
-                          ...watermarkOptions,
-                          spacing: Number(e.target.value),
-                        })
-                      }
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>密集 (0%)</span>
-                      <span>适中 (50%)</span>
-                      <span>稀疏 (300%)</span>
+                      {/* 字体大小 */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            字体大小
+                          </label>
+                          <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                            {watermarkOptions.fontSize}px
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20"
+                          max="100"
+                          value={watermarkOptions.fontSize}
+                          onChange={(e) =>
+                            setWatermarkOptions({
+                              ...watermarkOptions,
+                              fontSize: Number(e.target.value),
+                            })
+                          }
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>20px</span>
+                          <span>100px</span>
+                        </div>
+                      </div>
+
+                      {/* 颜色 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          水印颜色
+                        </label>
+                        <div className="space-y-3">
+                          {/* 常用颜色预设 */}
+                          <div className="flex gap-2">
+                            {COLOR_PRESETS.map((preset) => (
+                              <button
+                                key={preset.value}
+                                onClick={() =>
+                                  setWatermarkOptions({
+                                    ...watermarkOptions,
+                                    color: preset.value,
+                                  })
+                                }
+                                className={`w-10 h-10 rounded-lg border-2 transition-all hover:scale-110 ${
+                                  watermarkOptions.color === preset.value
+                                    ? 'border-indigo-500 shadow-md scale-110'
+                                    : 'border-gray-300'
+                                }`}
+                                style={{ backgroundColor: preset.value }}
+                                title={preset.name}
+                              />
+                            ))}
+                          </div>
+                          {/* 自定义颜色 */}
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={watermarkOptions.color}
+                              onChange={(e) =>
+                                setWatermarkOptions({
+                                  ...watermarkOptions,
+                                  color: e.target.value,
+                                })
+                              }
+                              className="h-10 w-20 rounded-lg border-2 border-gray-300 cursor-pointer"
+                            />
+                            <span className="text-sm font-mono text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
+                              {watermarkOptions.color}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 透明度 */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            透明度
+                          </label>
+                          <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                            {Math.round(watermarkOptions.opacity * 100)}%
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={watermarkOptions.opacity}
+                          onChange={(e) =>
+                            setWatermarkOptions({
+                              ...watermarkOptions,
+                              opacity: Number(e.target.value),
+                            })
+                          }
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>透明</span>
+                          <span>不透明</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      间距相对于水印宽度的百分比
-                    </p>
-                  </div>
-                )}
-
-                {/* 水印位置偏移 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    水平偏移: {watermarkOptions.offsetX > 0 ? '+' : ''}
-                    {watermarkOptions.offsetX}%
-                    <span className="text-xs text-gray-500 ml-2">
-                      (
-                      {watermarkOptions.offsetX === 0
-                        ? '居中'
-                        : watermarkOptions.offsetX > 0
-                        ? '向右'
-                        : '向左'}
-                      )
-                    </span>
-                  </label>
-                  <input
-                    type="range"
-                    min="-50"
-                    max="50"
-                    step="1"
-                    value={watermarkOptions.offsetX}
-                    onChange={(e) =>
-                      setWatermarkOptions({
-                        ...watermarkOptions,
-                        offsetX: Number(e.target.value),
-                      })
-                    }
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>← 左移</span>
-                    <span>居中</span>
-                    <span>右移 →</span>
-                  </div>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    垂直偏移: {watermarkOptions.offsetY > 0 ? '+' : ''}
-                    {watermarkOptions.offsetY}%
-                    <span className="text-xs text-gray-500 ml-2">
-                      (
-                      {watermarkOptions.offsetY === 0
-                        ? '居中'
-                        : watermarkOptions.offsetY > 0
-                        ? '向下'
-                        : '向上'}
-                      )
+                {/* 高级设置 - 可折叠 */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleSection('advanced')}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-gray-800">
+                      高级设置
                     </span>
-                  </label>
-                  <input
-                    type="range"
-                    min="-50"
-                    max="50"
-                    step="1"
-                    value={watermarkOptions.offsetY}
-                    onChange={(e) =>
-                      setWatermarkOptions({
-                        ...watermarkOptions,
-                        offsetY: Number(e.target.value),
-                      })
-                    }
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>↑ 上移</span>
-                    <span>居中</span>
-                    <span>下移 ↓</span>
-                  </div>
+                    <svg
+                      className={`w-5 h-5 text-gray-600 transition-transform ${
+                        expandedSections.advanced ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                  {expandedSections.advanced && (
+                    <div className="p-4 space-y-4">
+                      {/* 位置 - 仅单个水印模式显示 */}
+                      {watermarkOptions.mode === 'single' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            水印位置
+                          </label>
+                          <select
+                            value={watermarkOptions.position}
+                            onChange={(e) =>
+                              setWatermarkOptions({
+                                ...watermarkOptions,
+                                position: e.target
+                                  .value as WatermarkOptions['position'],
+                              })
+                            }
+                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow bg-white"
+                          >
+                            <option value="center">居中</option>
+                            <option value="top-left">左上角</option>
+                            <option value="top-right">右上角</option>
+                            <option value="bottom-left">左下角</option>
+                            <option value="bottom-right">右下角</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* 旋转角度 */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            旋转角度
+                          </label>
+                          <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                            {watermarkOptions.rotation}°
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-180"
+                          max="180"
+                          value={watermarkOptions.rotation}
+                          onChange={(e) =>
+                            setWatermarkOptions({
+                              ...watermarkOptions,
+                              rotation: Number(e.target.value),
+                            })
+                          }
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>-180°</span>
+                          <span>0°</span>
+                          <span>180°</span>
+                        </div>
+                      </div>
+
+                      {/* 水印间距 - 仅平铺模式显示 */}
+                      {watermarkOptions.mode === 'tile' && (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              水印间距
+                            </label>
+                            <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                              {watermarkOptions.spacing}%{' '}
+                              <span className="text-xs">
+                                (
+                                {watermarkOptions.spacing < 30
+                                  ? '密集'
+                                  : watermarkOptions.spacing < 100
+                                  ? '适中'
+                                  : '稀疏'}
+                                )
+                              </span>
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="300"
+                            step="5"
+                            value={watermarkOptions.spacing}
+                            onChange={(e) =>
+                              setWatermarkOptions({
+                                ...watermarkOptions,
+                                spacing: Number(e.target.value),
+                              })
+                            }
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>密集</span>
+                            <span>适中</span>
+                            <span>稀疏</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 水平偏移 */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            水平偏移
+                          </label>
+                          <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                            {watermarkOptions.offsetX > 0 ? '+' : ''}
+                            {watermarkOptions.offsetX}%{' '}
+                            <span className="text-xs">
+                              (
+                              {watermarkOptions.offsetX === 0
+                                ? '居中'
+                                : watermarkOptions.offsetX > 0
+                                ? '向右'
+                                : '向左'}
+                              )
+                            </span>
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="50"
+                          step="1"
+                          value={watermarkOptions.offsetX}
+                          onChange={(e) =>
+                            setWatermarkOptions({
+                              ...watermarkOptions,
+                              offsetX: Number(e.target.value),
+                            })
+                          }
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>← 左</span>
+                          <span>居中</span>
+                          <span>右 →</span>
+                        </div>
+                      </div>
+
+                      {/* 垂直偏移 */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            垂直偏移
+                          </label>
+                          <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                            {watermarkOptions.offsetY > 0 ? '+' : ''}
+                            {watermarkOptions.offsetY}%{' '}
+                            <span className="text-xs">
+                              (
+                              {watermarkOptions.offsetY === 0
+                                ? '居中'
+                                : watermarkOptions.offsetY > 0
+                                ? '向下'
+                                : '向上'}
+                              )
+                            </span>
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="50"
+                          step="1"
+                          value={watermarkOptions.offsetY}
+                          onChange={(e) =>
+                            setWatermarkOptions({
+                              ...watermarkOptions,
+                              offsetY: Number(e.target.value),
+                            })
+                          }
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>↑ 上</span>
+                          <span>居中</span>
+                          <span>下 ↓</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
