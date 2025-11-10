@@ -32,7 +32,7 @@ jobs:
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: 安装 pnpm
         uses: pnpm/action-setup@v4
@@ -57,6 +57,8 @@ jobs:
 
       - name: 构建项目
         run: pnpm run build
+        env:
+          BASE_PATH: ${{ vars.BASE_PATH }}
 
       - name: 设置 Pages
         uses: actions/configure-pages@v4
@@ -64,7 +66,7 @@ jobs:
       - name: 上传构建产物
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: "./dist"
 
   # 部署任务
   deploy:
