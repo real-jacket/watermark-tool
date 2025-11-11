@@ -6,6 +6,7 @@ import {
   WatermarkOptions,
   ImageFormat,
 } from './utils/watermark';
+import ImageViewer from './components/ImageViewer';
 
 // 水印预设
 type WatermarkPreset = {
@@ -105,6 +106,10 @@ function App() {
 
   // 预览模式切换：true 显示水印，false 显示原图
   const [showWatermark, setShowWatermark] = useState(true);
+
+  // 图片查看器状态
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImageUrl, setViewerImageUrl] = useState('');
 
   // 折叠面板状态
   const [expandedSections, setExpandedSections] = useState<{
@@ -262,6 +267,12 @@ function App() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  // 打开图片查看器
+  const openImageViewer = (imageUrl: string) => {
+    setViewerImageUrl(imageUrl);
+    setViewerOpen(true);
   };
 
   return (
@@ -802,7 +813,7 @@ function App() {
           </div>
 
           {/* 右侧 - 预览 */}
-          <div className="xl:col-span-2 space-y-5">
+          <div className="xl:col-span-2 space-y-5 xl:sticky xl:top-6 xl:self-start xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
             {/* 水印预览（主要显示） */}
             {watermarkedUrl ? (
               <div className="bg-white rounded-xl shadow-lg p-5 sm:p-6 border border-gray-100">
@@ -813,31 +824,31 @@ function App() {
                     </span>
                     {showWatermark ? '水印预览' : '原图预览'}
                   </h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {/* 切换开关 */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span
-                        className={`text-xs font-medium ${
-                          !showWatermark ? 'text-indigo-600' : 'text-gray-500'
+                        className={`text-xs font-medium transition-colors ${
+                          !showWatermark ? 'text-indigo-600' : 'text-gray-400'
                         }`}
                       >
                         原图
                       </span>
                       <button
                         onClick={() => setShowWatermark(!showWatermark)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
                           showWatermark ? 'bg-indigo-600' : 'bg-gray-300'
                         }`}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showWatermark ? 'translate-x-6' : 'translate-x-1'
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${
+                            showWatermark ? 'translate-x-[1.125rem]' : 'translate-x-0.5'
                           }`}
                         />
                       </button>
                       <span
-                        className={`text-xs font-medium ${
-                          showWatermark ? 'text-indigo-600' : 'text-gray-500'
+                        className={`text-xs font-medium transition-colors ${
+                          showWatermark ? 'text-indigo-600' : 'text-gray-400'
                         }`}
                       >
                         水印
@@ -870,17 +881,42 @@ function App() {
                     )}
                   </div>
                 </div>
-                <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50 mb-4">
+                <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50 mb-4 relative group">
                   {isProcessing ? (
                     <div className="flex items-center justify-center h-96">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
                     </div>
                   ) : (
-                    <img
-                      src={showWatermark ? watermarkedUrl : previewUrl}
-                      alt={showWatermark ? '添加水印后' : '原图'}
-                      className="w-full h-auto"
-                    />
+                    <div className="relative cursor-pointer" onClick={() =>
+                          openImageViewer(
+                            showWatermark ? watermarkedUrl : previewUrl
+                          )
+                        }>
+                      <img
+                        src={showWatermark ? watermarkedUrl : previewUrl}
+                        alt={showWatermark ? '添加水印后' : '原图'}
+                        className="w-full h-auto"
+                      />
+                      {/* 悬停提示 */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                        <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                            />
+                          </svg>
+                          点击查看大图
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -1059,13 +1095,34 @@ function App() {
                   </span>
                   原图预览
                 </h2>
-                <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50">
+                <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50 relative group">
                   {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="原图"
-                      className="w-full h-auto"
-                    />
+                    <div className="relative cursor-pointer" onClick={() => openImageViewer(previewUrl)}>
+                      <img
+                        src={previewUrl}
+                        alt="原图"
+                        className="w-full h-auto"
+                      />
+                      {/* 悬停提示 */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                        <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                            />
+                          </svg>
+                          点击查看大图
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-96">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mb-4"></div>
@@ -1168,6 +1225,15 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* 图片查看器 */}
+      {viewerOpen && (
+        <ImageViewer
+          imageUrl={viewerImageUrl}
+          altText={showWatermark ? '水印预览' : '原图预览'}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
     </div>
   );
 }
