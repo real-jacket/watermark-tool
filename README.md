@@ -37,13 +37,15 @@
 ### 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
+
+> 如果没有安装 pnpm，可以使用 `npm install -g pnpm` 安装，或者使用 `npm install` 代替。
 
 ### 启动开发服务器
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 访问 `http://localhost:5173` 即可使用。
@@ -51,7 +53,7 @@ npm run dev
 ### 构建生产版本
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 构建后的文件在 `dist` 目录下,可以直接部署到静态服务器或本地打开使用。
@@ -59,7 +61,7 @@ npm run build
 ### 预览生产构建
 
 ```bash
-npm run preview
+pnpm run preview
 ```
 
 ## 使用说明
@@ -116,10 +118,10 @@ npm run preview
 
 ```bash
 # 构建（项目页面）
-BASE_PATH=/your-repo-name/ npm run build
+BASE_PATH=/your-repo-name/ pnpm run build
 
 # 构建（用户/组织页面）
-npm run build
+pnpm run build
 
 # dist 目录即为可部署的静态文件
 ```
@@ -144,6 +146,35 @@ npm run build
 - Safari
 - 其他基于 Chromium 的浏览器
 
+## 开发相关
+
+### 项目结构
+
+```text
+watermark-tool/
+├── src/
+│   ├── App.tsx          # 主应用组件
+│   ├── main.tsx         # 应用入口
+│   └── index.css        # 全局样式
+├── public/              # 静态资源
+├── .github/
+│   └── workflows/       # GitHub Actions 配置
+├── vite.config.ts       # Vite 配置
+├── tailwind.config.js   # TailwindCSS 配置
+└── tsconfig.json        # TypeScript 配置
+```
+
+### 技术亮点
+
+- **性能优化**：使用动态导入按需加载 heic2any 库，主 bundle 仅 167KB
+- **防抖处理**：300ms 防抖优化，确保拖拽调整参数时流畅无卡顿
+- **Canvas 渲染**：使用原生 Canvas API 进行高性能图片处理
+- **类型安全**：TypeScript 全程类型检查，减少运行时错误
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
 ## License
 
-MIT
+MIT License - 详见 [LICENSE](LICENSE) 文件
