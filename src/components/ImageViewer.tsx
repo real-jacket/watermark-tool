@@ -16,6 +16,7 @@ export default function ImageViewer({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
   const imageRef = useRef<HTMLDivElement>(null);
 
   // 缩放步长
@@ -84,6 +85,68 @@ export default function ImageViewer({
   // 鼠标松开
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+  }, []);
+
+  // 触摸开始
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      // 单指拖拽
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y,
+      });
+    } else if (e.touches.length === 2) {
+      // 双指缩放
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      setLastTouchDistance(distance);
+      setIsDragging(false);
+    }
+  }, [position.x, position.y]);
+
+  // 触摸移动
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault(); // 防止页面滚动
+
+    if (e.touches.length === 1 && isDragging) {
+      // 单指拖拽
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      requestAnimationFrame(() => {
+        setPosition({
+          x: clientX - dragStart.x,
+          y: clientY - dragStart.y,
+        });
+      });
+    } else if (e.touches.length === 2) {
+      // 双指缩放
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+
+      if (lastTouchDistance !== null) {
+        const delta = (distance - lastTouchDistance) * 0.01;
+        setScale((prev) => {
+          const newScale = prev + delta;
+          return Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+        });
+      }
+      setLastTouchDistance(distance);
+    }
+  }, [isDragging, dragStart.x, dragStart.y, lastTouchDistance, MIN_SCALE, MAX_SCALE]);
+
+  // 触摸结束
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    setLastTouchDistance(null);
   }, []);
 
   // 鼠标滚轮缩放（带节流优化）
@@ -176,7 +239,11 @@ export default function ImageViewer({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onWheel={handleWheel}
+        style={{ touchAction: 'none' }}
       >
         <img
           src={imageUrl}
@@ -328,8 +395,10 @@ export default function ImageViewer({
 
         {/* 操作提示 */}
         <div className="text-center mt-3 text-white/50 text-xs">
-          <span className="mr-4">🖱️ 拖拽平移</span>
-          <span className="mr-4">🔍 滚轮缩放</span>
+          <span className="mr-4 hidden sm:inline">🖱️ 拖拽平移</span>
+          <span className="mr-4 hidden sm:inline">🔍 滚轮缩放</span>
+          <span className="mr-4 sm:hidden">👆 单指拖拽</span>
+          <span className="mr-4 sm:hidden">🤏 双指缩放</span>
           <span>⌨️ ESC 关闭</span>
         </div>
       </div>
